@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Gemini Chatbot</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+    }
+
+    .chat-container {
+      background: white;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      width: 100%;
+      max-width: 800px;
+      height: 90vh;
+      max-height: 700px;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .chat-header {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .chat-header h2 {
+      font-size: 20px;
+      font-weight: 600;
+    }
+
+    .chat-icon {
+      width: 40px;
+      height: 40px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    #chat-box {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      background: #f8f9fa;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    #chat-box::-webkit-scrollbar {
+      width: 6px;
+    }
+
+    #chat-box::-webkit-scrollbar-track {
+      background: transparent;
+    }
+
+    #chat-box::-webkit-scrollbar-thumb {
+      background: #cbd5e0;
+      border-radius: 3px;
+    }
+
+    .message {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .message.user {
+      flex-direction: row-reverse;
+    }
+
+    .message-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      flex-shrink: 0;
+    }
+
+    .message.user .message-avatar {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    }
+
+    .message.bot .message-avatar {
+      background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+    }
+
+    .message-content {
+      background: white;
+      padding: 12px 16px;
+      border-radius: 18px;
+      max-width: 70%;
+      word-wrap: break-word;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+
+    .message.user .message-content {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border-bottom-right-radius: 4px;
+    }
+
+    .message.bot .message-content {
+      background: white;
+      color: #2d3748;
+      border-bottom-left-radius: 4px;
+    }
+
+    .message-label {
+      font-weight: 600;
+      font-size: 12px;
+      margin-bottom: 4px;
+      opacity: 0.8;
+    }
+
+    .message-text {
+      line-height: 1.5;
+      font-size: 15px;
+    }
+
+    .input-container {
+      padding: 20px;
+      background: white;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 12px;
+    }
+
+    #prompt {
+      flex: 1;
+      padding: 12px 20px;
+      border: 2px solid #e2e8f0;
+      border-radius: 25px;
+      font-size: 15px;
+      outline: none;
+      transition: all 0.3s;
+      font-family: inherit;
+    }
+
+    #prompt:focus {
+      border-color: #667eea;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+    }
+
+    button {
+      padding: 12px 28px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 25px;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(102, 126, 234, 0.5);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .empty-state {
+      text-align: center;
+      color: #a0aec0;
+      padding: 40px 20px;
+    }
+
+    .empty-state-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+
+    .empty-state-text {
+      font-size: 18px;
+      font-weight: 500;
+    }
+  </style>
+</head>
+<body>
+  <div class="chat-container">
+    <div class="chat-header">
+      <div class="chat-icon">💬</div>
+      <h2>Gemini Chatbot</h2>
+    </div>
+    
+    <div id="chat-box">
+      <div class="empty-state">
+        <div class="empty-state-icon">🤖</div>
+        <div class="empty-state-text">สวัสดีครับ! มีอะไรให้ช่วยไหมครับ?</div>
+      </div>
+    </div>
+    
+    <div class="input-container">
+      <input 
+        type="text" 
+        id="prompt" 
+        placeholder="พิมพ์ข้อความของคุณที่นี่..." 
+        onkeypress="if(event.key==='Enter') sendMessage()"
+      />
+      <button onclick="sendMessage()">ส่ง</button>
+    </div>
+  </div>
+
+  <script>
+    let isFirstMessage = true;
+
+    async function sendMessage() {
+      const prompt = document.getElementById("prompt").value.trim();
+      if (!prompt) return;
+
+      const chatBox = document.getElementById("chat-box");
+      
+      // ลบ empty state ถ้ามี
+      if (isFirstMessage) {
+        chatBox.innerHTML = '';
+        isFirstMessage = false;
+      }
+
+      // แสดงข้อความของผู้ใช้
+      addMessage('user', prompt);
+      document.getElementById("prompt").value = "";
+
+      try {
+        const res = await fetch("/chat", {
+          method: "POST",
+          body: new URLSearchParams({ prompt }),
+          headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        });
+        const data = await res.json();
+        
+        // แสดงคำตอบจาก Gemini
+        addMessage('bot', data.response || data.error || 'ไม่สามารถรับคำตอบได้');
+      } catch (error) {
+        addMessage('bot', 'เกิดข้อผิดพลาดในการเชื่อมต่อ');
+      }
+
+      // เลื่อนลงล่างสุด
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function addMessage(type, text) {
+      const chatBox = document.getElementById("chat-box");
+      const messageDiv = document.createElement("div");
+      messageDiv.className = `message ${type}`;
+      
+      const avatar = type === 'user' ? '👤' : '🤖';
+      const label = type === 'user' ? 'คุณ' : 'Gemini';
+      
+      messageDiv.innerHTML = `
+        <div class="message-avatar">${avatar}</div>
+        <div class="message-content">
+          <div class="message-text">${text}</div>
+        </div>
+      `;
+      
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+  </script>
+</body>
+</html>
